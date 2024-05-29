@@ -1,40 +1,30 @@
-import altair as alt
-import numpy as np
-import pandas as pd
+
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
 
-"""
-# Welcome to Streamlit!
+# Cargar datos
+@st.cache  # Esta línea ayuda a cachear los datos para que la app sea más rápida
+def load_data():
+    data = pd.read_csv('Peliculas.csv')
+    return data
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:.
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+data = load_data()
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+# Título de la aplicación
+st.title('Gráfica de Películas por Año')
 
-num_points = st.slider("Number of points in spiral", 1, 10000, 1100)
-num_turns = st.slider("Number of turns in spiral", 1, 300, 31)
+# Agrupar por año y contar películas
+movies_per_year = data.groupby('Year').size()
 
-indices = np.linspace(0, 1, num_points)
-theta = 2 * np.pi * num_turns * indices
-radius = indices
+# Crear gráfica
+fig, ax = plt.subplots()
+movies_per_year.plot(kind='bar', color='skyblue', ax=ax)
+plt.xlabel('Año')
+plt.ylabel('Número de Películas')
+plt.title('Número de Películas por Año')
+plt.xticks(rotation=45)
+plt.tight_layout()
 
-x = radius * np.cos(theta)
-y = radius * np.sin(theta)
-
-df = pd.DataFrame({
-    "x": x,
-    "y": y,
-    "idx": indices,
-    "rand": np.random.randn(num_points),
-})
-
-st.altair_chart(alt.Chart(df, height=700, width=700)
-    .mark_point(filled=True)
-    .encode(
-        x=alt.X("x", axis=None),
-        y=alt.Y("y", axis=None),
-        color=alt.Color("idx", legend=None, scale=alt.Scale()),
-        size=alt.Size("rand", legend=None, scale=alt.Scale(range=[1, 150])),
-    ))
+# Mostrar gráfica en Streamlit
+st.pyplot(fig)
