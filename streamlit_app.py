@@ -1,29 +1,33 @@
+from openai import OpenAI
 import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
 
-# Cargar datos
-@st.cache  # Esta línea ayuda a cachear los datos para que la app sea más rápida
-def load_data():
-    data = pd.read_csv('Peliculas.csv')
-    return data
+st.title("ChatGPT-like clone")
 
-data = load_data()
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Título de la aplicación
-st.title('Gráfica de Películas por Año')
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-3.5-turbo"
 
-# Agrupar por año y contar películas
-movies_per_year = data.groupby('Year').size()
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Crear gráfica
-fig, ax = plt.subplots()
-movies_per_year.plot(kind='bar', color='skyblue', ax=ax)
-plt.xlabel('Año')
-plt.ylabel('Número de Películas')
-plt.title('Número de Películas por Año')
-plt.xticks(rotation=45)
-plt.tight_layout()
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-# Mostrar gráfica en Streamlit
-st.pyplot(fig)
+if prompt := st.chat_input("What is up?"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        stream = client.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
+            stream=True,
+        )
+        response = st.write_stream(stream)
+    st.session_state.messages.append({"role": "assistant", "content": response})
