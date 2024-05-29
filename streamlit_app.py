@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # Cargar datos
 @st.cache  # Esta línea ayuda a cachear los datos para que la app sea más rápida
 def load_data():
-    data = pd.read_csv('ruta_del_archivo.csv')
+    data = pd.read_csv('Peliculas.csv')
     return data
 
 data = load_data()
